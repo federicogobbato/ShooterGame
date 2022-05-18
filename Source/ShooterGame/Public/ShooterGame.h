@@ -11,6 +11,7 @@
 #include "ShooterGameMode.h"
 #include "ShooterGameState.h"
 #include "ShooterCharacter.h"
+#include "MyShooterCharacter.h"
 #include "ShooterCharacterMovement.h"
 #include "MyShooterCharacterMovement.h"
 #include "ShooterPlayerController.h"

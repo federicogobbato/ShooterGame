@@ -45,7 +45,7 @@ class AShooterCharacter : public ACharacter
 	*	@param	CameraLocation	Location of the Camera.
 	*	@param	CameraRotation	Rotation of the Camera.
 	*/
-	void OnCameraUpdate(const FVector& CameraLocation, const FRotator& CameraRotation);
+	virtual void OnCameraUpdate(const FVector& CameraLocation, const FRotator& CameraRotation);
 
 	/** get aim offsets */
 	UFUNCTION(BlueprintCallable, Category = "Game|Weapon")
@@ -486,16 +486,6 @@ protected:
 	/** Returns Mesh1P subobject **/
 	FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 
-
-
-public:
-
-	UPROPERTY(BlueprintReadOnly, Category = Character)
-	uint32 bPressedTeleport:1;
-
-	void CanTeleport();
-
-	void OnTeleport();
 };
 
 
