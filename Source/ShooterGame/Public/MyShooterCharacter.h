@@ -16,39 +16,55 @@ class SHOOTERGAME_API AMyShooterCharacter : public AShooterCharacter
 
 public:
 
-	UPROPERTY(BlueprintReadOnly, Category = Custom)
+	//==================//
+	//Fields
+	//==================//
+
+	UPROPERTY(BlueprintReadOnly, Category = CustomAbilities)
 	uint32 bPressedTeleport:1;
 
-	UPROPERTY(BlueprintReadOnly, Category = Custom)
-	bool bPressedRewindTime = false;
+	UPROPERTY(BlueprintReadOnly, Category = CustomAbilities)
+	uint32 bPressedRewindTime:1;
 
-	UPROPERTY(BlueprintReadOnly, Category = Custom)
+	UPROPERTY(BlueprintReadOnly, Category = CustomAbilities)
 	bool bRewindCharging = false;
 
-	UPROPERTY(BlueprintReadOnly, Category = Custom)
-	uint32 bRewindTimeRunning : 1;
+	UPROPERTY(BlueprintReadOnly, Category = CustomAbilities)
+	bool bRewindTimeRunning = false;
 
+	UPROPERTY(ReplicatedUsing = OnRep_HidePlayer)
+	bool HiddenPlayer;
+
+
+	//==================//
+	//Overridden methods
+	//==================//
 
 	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
 
 	virtual void Tick(float DeltaTime) override;
 
-	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+
+	//==================//
+	//Ability methods
+	//==================//
+
+protected:
 
 	void OnTeleport();
 
 	void OnRewindTime();
 
-
+public:
 
 	void OnStartRewindTime();
 
 	void OnEndRewindTime();
 
-	UPROPERTY(ReplicatedUsing = OnRep_HidePlayer)
-	bool HiddenPlayer;
-
 	UFUNCTION()
+	/* Called when the variable HiddenPlayer change.
+	   The player is hidden during the time the RewindTime ability is played.*/
 	void OnRep_HidePlayer();
 };

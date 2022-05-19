@@ -98,14 +98,17 @@ void UMyShooterCharacterMovement::DoRewind()
 			{
 				//Set next rewind position
 				FRewindData& nextRewindFrame = RewindFrames.Last();
-				RewindFrames.RemoveSingle(nextRewindFrame);
+				RewindedTime = nextRewindFrame.CaptureTime - RewindFrames[0].CaptureTime;
 
 				//Move the player
 				MyCharacterOwner->SetActorLocationAndRotation(nextRewindFrame.Position, nextRewindFrame.Rotation);
+
+				RewindFrames.RemoveSingle(nextRewindFrame);
 			}
 			else 
 			{
 				MyCharacterOwner->bPressedRewindTime = false;
+				RewindedTime = 0;
 			}
 		}
 		else
@@ -117,16 +120,27 @@ void UMyShooterCharacterMovement::DoRewind()
 
 				MyCharacterOwner->OnEndRewindTime();
 				
-				//Start a Timer used to recharge the rewind time ability
+				//Start a Timer used to recharge the RewindTime ability
 				FTimerHandle rechargeAbilityTimer;
 				FTimerDelegate rechargeAbilityDelegate;
 				rechargeAbilityDelegate.BindLambda([&]() { MyCharacterOwner->bRewindCharging = false; });
 
-				GetWorld()->GetTimerManager().SetTimer(rechargeAbilityTimer, rechargeAbilityDelegate, RewindTimeDuration, false);
+				GetWorld()->GetTimerManager().SetTimer(rechargeAbilityTimer, rechargeAbilityDelegate, RewindTimeChargingTime, false);
 			}
 			else
 			{
-				GetNewRewindData();
+				if (!WaitingForRewindData)
+				{
+					WaitingForRewindData = true;
+
+					//We save a new frame just after a delay, to speed up the player movement during the RewindTime ability 
+					FTimerHandle getNewRewindDataTimer;
+					FTimerDelegate getNewRewindDataDelegate;
+					getNewRewindDataDelegate.BindLambda([&]() { GetNewRewindData(); });
+
+					GetWorld()->GetTimerManager().SetTimer(getNewRewindDataTimer, getNewRewindDataDelegate, DelayBetweenRewindFrame, false);
+				}
+
 			}
 		}
 	}
@@ -135,6 +149,8 @@ void UMyShooterCharacterMovement::DoRewind()
 
 void UMyShooterCharacterMovement::GetNewRewindData()
 {
+	WaitingForRewindData = false;
+
 	//Populate the RewindFrames Queue
 	FRewindData newData;
 	newData.CaptureTime = GetWorld()->GetTimeSeconds();
@@ -144,7 +160,7 @@ void UMyShooterCharacterMovement::GetNewRewindData()
 	if (RewindFrames.Num() > 0)
 	{
 		FRewindData& head = RewindFrames[0];
-		// Remove a Frame from the queue
+		// Remove a Frame from the head
 		if (newData.CaptureTime - head.CaptureTime >= RewindTimeDuration)
 		{
 			RewindFrames.RemoveSingle(head);

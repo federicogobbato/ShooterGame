@@ -30,6 +30,37 @@ class SHOOTERGAME_API UMyShooterCharacterMovement : public UShooterCharacterMove
 {
 	GENERATED_UCLASS_BODY()
 
+private:
+
+	AMyShooterCharacter* MyCharacterOwner;
+
+	/* Positions and rotations of the player used to play the RewindTime ability */
+	TArray<FRewindData> RewindFrames;
+
+	bool WaitingForRewindData = false;
+
+
+	UPROPERTY(EditDefaultsOnly, Category = CustomAbilities)
+	float TeleportDistance = 1000.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = CustomAbilities)
+	/* Max time rewinded when the ability is used. */
+	float RewindTimeDuration = 10.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = CustomAbilities)
+	/* Time necessary to play again the Rewind ability.*/
+	float RewindTimeChargingTime = 5.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = CustomAbilities)
+	/* Time between two frame where position and rotation of the player are saved. */
+	float DelayBetweenRewindFrame = 0.05f;
+
+protected:
+
+	UPROPERTY(BlueprintReadOnly)
+	float RewindedTime = 0.0f;
+
+
 public:
 
 	virtual void BeginPlay() override;
@@ -42,36 +73,15 @@ protected:
 
 	virtual void OnMovementUpdated(float DeltaTime, const FVector& OldLocation, const FVector& OldVelocity) override;
 
+	virtual void UpdateFromCompressedFlags(uint8 Flags) override;
+
+
 	virtual void DoTeleport();
 
 	virtual void DoRewind();
 
 	virtual void GetNewRewindData();
-
-	virtual void UpdateFromCompressedFlags(uint8 Flags) override;
-
-private:
-
-	AMyShooterCharacter* MyCharacterOwner;
-
-
-	//Position and rotation of the player used to play the rewind time ability 
-	TArray<FRewindData> RewindFrames;
-
-	FRewindData NextRewindFrame;
-
-
-
-	UPROPERTY(EditDefaultsOnly)
-	float TeleportDistance = 1000.0f;
-
-	UPROPERTY(EditDefaultsOnly)
-	//How many seconds the time is rewinded when the ability is used
-	float RewindTimeDuration = 5.0f;
 };
-
-
-
 
 
 class FMyNetworkPredictionData_Client_Character : public FNetworkPredictionData_Client_Character
