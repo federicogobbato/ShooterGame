@@ -33,19 +33,22 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
-	virtual void OnCameraUpdate(const FVector& CameraLocation, const FRotator& CameraRotation) override;
-
-	virtual void AddControllerPitchInput(float Val) override;
-
-	virtual void AddControllerYawInput(float Val) override;
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 
 	void OnTeleport();
 
 	void OnRewindTime();
 
+
+
 	void OnStartRewindTime();
 
 	void OnEndRewindTime();
 
+	UPROPERTY(ReplicatedUsing = OnRep_HidePlayer)
+	bool HiddenPlayer;
+
+	UFUNCTION()
+	void OnRep_HidePlayer();
 };

@@ -2,6 +2,7 @@
 
 #include "ShooterGame.h"
 #include "MyShooterCharacter.h"
+#include "Weapons/ShooterWeapon.h"
 
 
 AMyShooterCharacter::AMyShooterCharacter(const FObjectInitializer& ObjectInitializer)
@@ -25,36 +26,6 @@ void AMyShooterCharacter::Tick(float DeltaTime)
 }
 
 
-void AMyShooterCharacter::OnCameraUpdate(const FVector& CameraLocation, const FRotator& CameraRotation)
-{
-	if (bPressedRewindTime)
-	{
-		Super::OnCameraUpdate(CameraLocation, GetActorRotation());
-	}
-	else 
-	{
-		Super::OnCameraUpdate(CameraLocation, CameraRotation);
-	}	
-}
-
-
-void AMyShooterCharacter::AddControllerPitchInput(float Val)
-{
-	if (!bPressedRewindTime)
-	{
-		Super::AddControllerPitchInput(Val);
-	}
-}
-
-void AMyShooterCharacter::AddControllerYawInput(float Val)
-{
-	if (!bPressedRewindTime)
-	{
-		Super::AddControllerYawInput(Val);
-	}
-}
-
-
 void AMyShooterCharacter::OnTeleport()
 {
 	AShooterPlayerController* MyPC = Cast<AShooterPlayerController>(Controller);
@@ -71,48 +42,55 @@ void AMyShooterCharacter::OnRewindTime()
 	if (MyPC && MyPC->IsGameInputAllowed() && 
 		!bPressedRewindTime && !bRewindCharging)
 	{
-		MyPC->DisableInput(MyPC);
-
+		DisableInput(MyPC);
 		bPressedRewindTime = true;
 	}
 }
 
 
+void AMyShooterCharacter::GetLifetimeReplicatedProps(TArray <FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	//Replicate current health.
+	DOREPLIFETIME(AMyShooterCharacter, HiddenPlayer);
+}
+
+
 void AMyShooterCharacter::OnStartRewindTime()
 {
-	if (IsLocallyControlled())
-	{
-		AShooterPlayerController* MyPC = Cast<AShooterPlayerController>(Controller);
-		if (MyPC)
-		{
-			DisableInput(MyPC);
-			//disable only colliders
-		}
-	}
-
 	if (GetLocalRole() == ROLE_Authority)
 	{
-		//disable collider and visibility 
+		HiddenPlayer = true;
+		OnRep_HidePlayer(); //Call for server
 	}
 }
 
 
 void AMyShooterCharacter::OnEndRewindTime()
 {
-	if (IsLocallyControlled())
+	AShooterPlayerController* MyPC = Cast<AShooterPlayerController>(Controller);
+	if (MyPC)
 	{
-		AShooterPlayerController* MyPC = Cast<AShooterPlayerController>(Controller);
-		if (MyPC)
-		{
-			//enable input
-			EnableInput(MyPC);
-
-			//enable only colliders
-		}
+		//enable input
+		EnableInput(MyPC);
 	}
 
 	if (GetLocalRole() == ROLE_Authority)
 	{
-		//enable colliders and visibility 
+		HiddenPlayer = false;
+		OnRep_HidePlayer(); //Call for server
 	}
+}
+
+
+void AMyShooterCharacter::OnRep_HidePlayer()
+{
+	if (!IsLocallyControlled())
+	{
+		SetActorHiddenInGame(HiddenPlayer);
+		CurrentWeapon->SetActorHiddenInGame(HiddenPlayer);
+	}
+
+	SetActorEnableCollision(!HiddenPlayer);
 }

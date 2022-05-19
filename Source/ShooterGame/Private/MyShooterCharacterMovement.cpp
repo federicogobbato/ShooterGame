@@ -19,8 +19,6 @@ void UMyShooterCharacterMovement::BeginPlay()
 	Super::BeginPlay();
 
 	MyCharacterOwner = Cast<AMyShooterCharacter>(CharacterOwner);
-
-	DelayBetweenFrames = RewindTimeDuration / (1.0f / RewindTimeSpeedUp);
 }
 
 
@@ -92,6 +90,7 @@ void UMyShooterCharacterMovement::DoRewind()
 			if (!MyCharacterOwner->bRewindTimeRunning) 
 			{
 				MyCharacterOwner->bRewindTimeRunning = true;
+
 				MyCharacterOwner->OnStartRewindTime();
 			}
 
@@ -115,8 +114,10 @@ void UMyShooterCharacterMovement::DoRewind()
 			{
 				MyCharacterOwner->bRewindTimeRunning = false;
 				MyCharacterOwner->bRewindCharging = true;
-				MyCharacterOwner->OnEndRewindTime();
 
+				MyCharacterOwner->OnEndRewindTime();
+				
+				//Start a Timer used to recharge the rewind time ability
 				FTimerHandle rechargeAbilityTimer;
 				FTimerDelegate rechargeAbilityDelegate;
 				rechargeAbilityDelegate.BindLambda([&]() { MyCharacterOwner->bRewindCharging = false; });
@@ -125,14 +126,14 @@ void UMyShooterCharacterMovement::DoRewind()
 			}
 			else
 			{
-				RechargeRewind();
+				GetNewRewindData();
 			}
 		}
 	}
 }
 
 
-void UMyShooterCharacterMovement::RechargeRewind() 
+void UMyShooterCharacterMovement::GetNewRewindData()
 {
 	//Populate the RewindFrames Queue
 	FRewindData newData;

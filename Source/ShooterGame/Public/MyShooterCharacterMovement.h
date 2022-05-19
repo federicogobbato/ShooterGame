@@ -46,7 +46,7 @@ protected:
 
 	virtual void DoRewind();
 
-	virtual void RechargeRewind();
+	virtual void GetNewRewindData();
 
 	virtual void UpdateFromCompressedFlags(uint8 Flags) override;
 
@@ -54,25 +54,20 @@ private:
 
 	AMyShooterCharacter* MyCharacterOwner;
 
-	////FVector TeleportDestination;
 
-	////FRewindData NextRewindPosition;
-
+	//Position and rotation of the player used to play the rewind time ability 
 	TArray<FRewindData> RewindFrames;
 
-	FVector LastRewindPosition;
+	FRewindData NextRewindFrame;
 
-	float DelayBetweenFrames = 0;
+
 
 	UPROPERTY(EditDefaultsOnly)
 	float TeleportDistance = 1000.0f;
 
 	UPROPERTY(EditDefaultsOnly)
+	//How many seconds the time is rewinded when the ability is used
 	float RewindTimeDuration = 5.0f;
-
-	UPROPERTY(EditDefaultsOnly)
-	float RewindTimeSpeedUp = 10.0f;
-
 };
 
 
