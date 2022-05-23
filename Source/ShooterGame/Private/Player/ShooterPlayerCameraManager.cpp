@@ -3,6 +3,7 @@
 #include "ShooterGame.h"
 #include "Player/ShooterPlayerCameraManager.h"
 
+
 AShooterPlayerCameraManager::AShooterPlayerCameraManager(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	NormalFOV = 90.0f;
@@ -11,6 +12,7 @@ AShooterPlayerCameraManager::AShooterPlayerCameraManager(const FObjectInitialize
 	ViewPitchMax = 87.0f;
 	bAlwaysApplyModifiers = true;
 }
+
 
 void AShooterPlayerCameraManager::UpdateCamera(float DeltaTime)
 {
@@ -26,5 +28,24 @@ void AShooterPlayerCameraManager::UpdateCamera(float DeltaTime)
 	if (MyPawn && MyPawn->IsFirstPerson())
 	{
 		MyPawn->OnCameraUpdate(GetCameraLocation(), GetCameraRotation());
+	}
+}
+
+
+void AShooterPlayerCameraManager::UpdateViewTargetInternal(FTViewTarget& OutVT, float DeltaTime)
+{
+	AMyShooterCharacter* MyPawn = PCOwner ? Cast<AMyShooterCharacter>(PCOwner->GetPawn()) : NULL;
+
+	if (MyPawn)
+	{
+		if (MyPawn->bPressedRewindTime)
+		{
+			OutVT.POV.Location = MyPawn->GetPawnViewLocation();
+			OutVT.POV.Rotation = MyPawn->GetActorForwardVector().Rotation();
+		}
+		else
+		{
+			Super::UpdateViewTargetInternal(OutVT, DeltaTime);
+		}
 	}
 }

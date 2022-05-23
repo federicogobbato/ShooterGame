@@ -30,6 +30,10 @@ class SHOOTERGAME_API UMyShooterCharacterMovement : public UShooterCharacterMove
 {
 	GENERATED_UCLASS_BODY()
 
+//==================//
+//Fields
+//==================//
+
 private:
 
 	AMyShooterCharacter* MyCharacterOwner;
@@ -39,9 +43,13 @@ private:
 
 	bool WaitingForRewindData = false;
 
+protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = CustomAbilities)
 	float TeleportDistance = 1000.0f;
+
+	UPROPERTY(BlueprintReadOnly, Category = CustomAbilities)
+	bool bRewindTimeRunning = false;
 
 	UPROPERTY(EditDefaultsOnly, Category = CustomAbilities)
 	/* Max time rewinded when the ability is used. */
@@ -55,10 +63,14 @@ private:
 	/* Time between two frame where position and rotation of the player are saved. */
 	float DelayBetweenRewindFrame = 0.05f;
 
-protected:
-
 	UPROPERTY(BlueprintReadOnly)
+	/* Used to show the duration of the rewinded time, from RewindTimeDuration to zero */
 	float RewindedTime = 0.0f;
+
+
+//==================//
+//Overridden methods
+//==================//
 
 
 public:
@@ -76,9 +88,15 @@ protected:
 	virtual void UpdateFromCompressedFlags(uint8 Flags) override;
 
 
+//==================//
+//Ability methods
+//==================//
+
+protected:
+
 	virtual void DoTeleport();
 
-	virtual void DoRewind();
+	virtual void DoRewindTime();
 
 	virtual void GetNewRewindData();
 };

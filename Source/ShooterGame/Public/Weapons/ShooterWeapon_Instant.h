@@ -161,4 +161,10 @@ protected:
 
 	/** spawn trail effect */
 	void SpawnTrailEffect(const FVector& EndPoint);
+
+
+public:
+
+	UPROPERTY(EditDefaultsOnly, Category = CustomAbilities)
+	bool bCanShrink = false;
 };

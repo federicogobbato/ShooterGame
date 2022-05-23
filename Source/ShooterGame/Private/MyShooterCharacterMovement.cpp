@@ -56,7 +56,7 @@ void UMyShooterCharacterMovement::OnMovementUpdated(float DeltaTime, const FVect
 
 	DoTeleport();
 
-	DoRewind();
+	DoRewindTime();
 }
 
 
@@ -81,16 +81,15 @@ void UMyShooterCharacterMovement::DoTeleport()
 //REWIND
 //==================//
 
-void UMyShooterCharacterMovement::DoRewind()
+void UMyShooterCharacterMovement::DoRewindTime()
 {
 	if (MyCharacterOwner)
 	{
 		if (MyCharacterOwner->bPressedRewindTime)
 		{
-			if (!MyCharacterOwner->bRewindTimeRunning) 
+			if (!bRewindTimeRunning) 
 			{
-				MyCharacterOwner->bRewindTimeRunning = true;
-
+				bRewindTimeRunning = true;
 				MyCharacterOwner->OnStartRewindTime();
 			}
 
@@ -113,12 +112,12 @@ void UMyShooterCharacterMovement::DoRewind()
 		}
 		else
 		{
-			if (MyCharacterOwner->bRewindTimeRunning)
+			if (bRewindTimeRunning)
 			{
-				MyCharacterOwner->bRewindTimeRunning = false;
-				MyCharacterOwner->bRewindCharging = true;
-
+				bRewindTimeRunning = false;
 				MyCharacterOwner->OnEndRewindTime();
+
+				MyCharacterOwner->bRewindCharging = true;
 				
 				//Start a Timer used to recharge the RewindTime ability
 				FTimerHandle rechargeAbilityTimer;
@@ -175,7 +174,6 @@ void UMyShooterCharacterMovement::GetNewRewindData()
 
 
 
-
 //======================================//
 //NetworkPredictionData_Client_Character
 //======================================//
@@ -222,7 +220,7 @@ void FMySavedMove_Character::SetMoveFor(ACharacter* Character, float InDeltaTime
 
 	bPressedTeleportSaved = Cast<AMyShooterCharacter>(Character)->bPressedTeleport;
 
-	bPressedRewindTimeSaved = Cast<AMyShooterCharacter>(Character)->bRewindTimeRunning;
+	bPressedRewindTimeSaved = Cast<AMyShooterCharacter>(Character)->bPressedRewindTime;
 }
 
 

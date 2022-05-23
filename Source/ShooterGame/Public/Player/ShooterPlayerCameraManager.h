@@ -19,4 +19,6 @@ public:
 
 	/** After updating camera, inform pawn to update 1p mesh to match camera's location&rotation */
 	virtual void UpdateCamera(float DeltaTime) override;
+
+	virtual void UpdateViewTargetInternal(FTViewTarget& OutVT, float DeltaTime) override;
 };
