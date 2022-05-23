@@ -163,6 +163,10 @@ protected:
 	void SpawnTrailEffect(const FVector& EndPoint);
 
 
+//==================//
+//Custom fields
+//==================//
+
 public:
 
 	UPROPERTY(EditDefaultsOnly, Category = CustomAbilities)

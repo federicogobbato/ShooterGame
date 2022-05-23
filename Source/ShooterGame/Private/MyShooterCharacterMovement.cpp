@@ -22,12 +22,6 @@ void UMyShooterCharacterMovement::BeginPlay()
 }
 
 
-//void UMyShooterCharacterMovement::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-//{
-//	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-//}
-
-
 FNetworkPredictionData_Client* UMyShooterCharacterMovement::GetPredictionData_Client() const
 {
 	if (!ClientPredictionData)
@@ -70,10 +64,17 @@ void UMyShooterCharacterMovement::DoTeleport()
 	{
 		MyCharacterOwner->bPressedTeleport = false;
 
+		// Calculate the teleport destination
 		FVector teleportDestination = CharacterOwner->GetActorLocation() + CharacterOwner->GetActorForwardVector() * TeleportDistance;
 		
-		CharacterOwner->SetActorLocation(teleportDestination, true);
-		//CharacterOwner->TeleportTo(teleportDestination, CharacterOwner->GetActorRotation());
+		if (!UseTeleportTo)
+		{
+			CharacterOwner->SetActorLocation(teleportDestination, true);
+		}
+		else 
+		{
+			CharacterOwner->TeleportTo(teleportDestination, CharacterOwner->GetActorRotation());
+		}
 	}
 }
 
@@ -95,11 +96,11 @@ void UMyShooterCharacterMovement::DoRewindTime()
 
 			if (RewindFrames.Num() > 0)
 			{
-				//Set next rewind position
+				// Set next rewind position
 				FRewindData& nextRewindFrame = RewindFrames.Last();
+				// Set the remaining rewind time
 				RewindedTime = nextRewindFrame.CaptureTime - RewindFrames[0].CaptureTime;
-
-				//Move the player
+				// Move the player
 				MyCharacterOwner->SetActorLocationAndRotation(nextRewindFrame.Position, nextRewindFrame.Rotation);
 
 				RewindFrames.RemoveSingle(nextRewindFrame);

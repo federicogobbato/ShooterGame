@@ -380,4 +380,12 @@ protected:
 	*/
 	float ShowInfoItems(float YOffset, float TextScale);
 	
+
+//==================//
+//Custom methods
+//==================//
+
+protected:
+
+	void DrawRewindTime();
 };

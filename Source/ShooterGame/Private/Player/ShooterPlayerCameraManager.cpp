@@ -32,16 +32,26 @@ void AShooterPlayerCameraManager::UpdateCamera(float DeltaTime)
 }
 
 
+//==================//
+//Custom fields
+//==================//
+
 void AShooterPlayerCameraManager::UpdateViewTargetInternal(FTViewTarget& OutVT, float DeltaTime)
 {
-	AMyShooterCharacter* MyPawn = PCOwner ? Cast<AMyShooterCharacter>(PCOwner->GetPawn()) : NULL;
+	AMyShooterCharacter* MyPawn = Cast<AMyShooterCharacter>(PCOwner->GetPawn());
 
 	if (MyPawn)
 	{
 		if (MyPawn->bPressedRewindTime)
 		{
+			//The rotation of the camera is based on the orientation of the vector forward of the player 
 			OutVT.POV.Location = MyPawn->GetPawnViewLocation();
 			OutVT.POV.Rotation = MyPawn->GetActorForwardVector().Rotation();
+		}
+		else if (MyPawn && MyPawn->GetPlayerShrinked())
+		{
+			OutVT.POV.Location = MyPawn->GetPawnViewLocation();
+			OutVT.POV.Rotation = MyPawn->GetViewRotation();
 		}
 		else
 		{

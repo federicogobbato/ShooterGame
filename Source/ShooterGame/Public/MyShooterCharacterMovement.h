@@ -8,6 +8,7 @@
 
 
 USTRUCT()
+/* Save Position and Rotation of the player, to be used later when play the rewind time ability. */
 struct FRewindData
 {
 	GENERATED_BODY()
@@ -38,18 +39,22 @@ private:
 
 	AMyShooterCharacter* MyCharacterOwner;
 
-	/* Positions and rotations of the player used to play the RewindTime ability */
+	/* Used to define when the Rewind Time ability start and finish. */
+	bool bRewindTimeRunning = false;
+
+	/* Positions and rotations of the player used to play the RewindTime ability. */
 	TArray<FRewindData> RewindFrames;
 
+	/* Define when a new RewindData can be collected. */
 	bool WaitingForRewindData = false;
 
 protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = CustomAbilities)
-	float TeleportDistance = 1000.0f;
+	bool UseTeleportTo = false;
 
-	UPROPERTY(BlueprintReadOnly, Category = CustomAbilities)
-	bool bRewindTimeRunning = false;
+	UPROPERTY(EditDefaultsOnly, Category = CustomAbilities)
+	float TeleportDistance = 1000.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = CustomAbilities)
 	/* Max time rewinded when the ability is used. */
@@ -64,7 +69,7 @@ protected:
 	float DelayBetweenRewindFrame = 0.05f;
 
 	UPROPERTY(BlueprintReadOnly)
-	/* Used to show the duration of the rewinded time, from RewindTimeDuration to zero */
+	/* Used to show on HUD the duration of the rewinded time, from RewindTimeDuration to zero */
 	float RewindedTime = 0.0f;
 
 
@@ -72,20 +77,18 @@ protected:
 //Overridden methods
 //==================//
 
+protected:
+
+	/* Used to play Teleport and RewindTime ability */
+	virtual void OnMovementUpdated(float DeltaTime, const FVector& OldLocation, const FVector& OldVelocity) override;
+
+	virtual void UpdateFromCompressedFlags(uint8 Flags) override;
 
 public:
 
 	virtual void BeginPlay() override;
 
-	//virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	
 	virtual class FNetworkPredictionData_Client* GetPredictionData_Client() const override;
-
-protected:
-
-	virtual void OnMovementUpdated(float DeltaTime, const FVector& OldLocation, const FVector& OldVelocity) override;
-
-	virtual void UpdateFromCompressedFlags(uint8 Flags) override;
 
 
 //==================//
@@ -98,7 +101,13 @@ protected:
 
 	virtual void DoRewindTime();
 
+	/* Collect a new position and rotation of the current player. */
 	virtual void GetNewRewindData();
+
+public:
+
+	FORCEINLINE float GetRewindedTime() const { return RewindedTime; };
+
 };
 
 

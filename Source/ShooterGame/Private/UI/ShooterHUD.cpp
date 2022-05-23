@@ -578,6 +578,8 @@ void AShooterHUD::DrawHUD()
 		{
 			DrawHealth();
 			DrawWeaponHUD();
+
+			DrawRewindTime();
 		}
 		else
 		{
@@ -1179,3 +1181,30 @@ float AShooterHUD::DrawRecentlyKilledPlayer()
 }
 
 #undef LOCTEXT_NAMESPACE
+
+
+//==================//
+//Custom methods
+//==================//
+
+void AShooterHUD::DrawRewindTime()
+{
+	UMyShooterCharacterMovement* MyPawnMovement = Cast<UMyShooterCharacterMovement>(GetOwningPawn()->GetMovementComponent());
+
+	if (MyPawnMovement)
+	{
+		float rewindedTime = MyPawnMovement->GetRewindedTime();
+
+		if (rewindedTime > 0)
+		{
+			FString Text = FString::Printf(TEXT("%.*f"), 2, rewindedTime);
+			FCanvasTextItem TextItem(FVector2D::ZeroVector, FText::GetEmpty(), BigFont, HUDDark);
+			TextItem.EnableShadow(FLinearColor::Black);
+			TextItem.Text = FText::FromString(Text);
+			TextItem.Scale = FVector2D(ScaleUI, ScaleUI);
+			TextItem.FontRenderInfo = ShadowedFont;
+			TextItem.SetColor(HUDLight);
+			AddMatchInfoString(TextItem);
+		}
+	}
+}

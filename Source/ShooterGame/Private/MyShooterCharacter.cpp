@@ -13,7 +13,6 @@
 AMyShooterCharacter::AMyShooterCharacter(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer.SetDefaultSubobjectClass<UMyShooterCharacterMovement>(ACharacter::CharacterMovementComponentName))
 {
-	
 }
 
 
@@ -25,9 +24,14 @@ void AMyShooterCharacter::BeginPlay()
 }
 
 
-void AMyShooterCharacter::Tick(float DeltaTime)
+bool AMyShooterCharacter::Die(float KillingDamage, FDamageEvent const& DamageEvent, AController* Killer, AActor* DamageCauser)
 {
-	Super::Tick(DeltaTime);
+	if (bPlayerShrinked)
+	{
+		OnEndShrink();
+	}
+
+	return Super::Die(KillingDamage, DamageEvent, Killer, DamageCauser);
 }
 
 
@@ -44,7 +48,6 @@ void AMyShooterCharacter::GetLifetimeReplicatedProps(TArray <FLifetimeProperty>&
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	//Replicate HiddenPlayer.
 	DOREPLIFETIME(AMyShooterCharacter, bPlayerHidden);
 	DOREPLIFETIME(AMyShooterCharacter, PlayerShrinkedScale);
 }
@@ -54,25 +57,19 @@ float AMyShooterCharacter::TakeDamage(float Damage, struct FDamageEvent const& D
 {
 	if (!bPlayerShrinked)
 	{
+		// Checks if the weapon can shrink a player.
 		AShooterWeapon_Instant* weapon = Cast<AShooterWeapon_Instant>(DamageCauser);
-
 		if (weapon && weapon->bCanShrink)
 		{
-			bPlayerShrinked = true;
-			ScaleBeforeShrink = GetActorScale();
-			PlayerShrinkedScale = ScaleBeforeShrink * ShrinkMultiplier;
-
-			GetWorldTimerManager().SetTimer(ShrinkTimer, this, &AMyShooterCharacter::OnResetShrink, ShrinkDuration, false);
+			OnStartShrink();
 		}
 	}
 	else
 	{
+		// Check if the damage come from another player that stomps it.
 		AMyShooterCharacter* character = Cast<AMyShooterCharacter>(DamageCauser);
 		if (character)
 		{
-			bPlayerShrinked = false;
-			PlayerShrinkedScale = ScaleBeforeShrink;
-
 			Die(Damage, DamageEvent, EventInstigator, DamageCauser);
 			return Damage;
 		}
@@ -89,6 +86,7 @@ float AMyShooterCharacter::TakeDamage(float Damage, struct FDamageEvent const& D
 void AMyShooterCharacter::OnTeleport()
 {
 	AShooterPlayerController* MyPC = Cast<AShooterPlayerController>(Controller);
+
 	if (MyPC && MyPC->IsGameInputAllowed() && !bPressedTeleport)
 	{
 		bPressedTeleport = true;
@@ -99,6 +97,7 @@ void AMyShooterCharacter::OnTeleport()
 void AMyShooterCharacter::OnRewindTime()
 {
 	AShooterPlayerController* MyPC = Cast<AShooterPlayerController>(Controller);
+
 	if (MyPC && MyPC->IsGameInputAllowed() && 
 		!bPressedRewindTime && !bRewindCharging)
 	{
@@ -117,6 +116,7 @@ void AMyShooterCharacter::OnStartRewindTime()
 	
 	if(IsLocallyControlled())
 	{
+		// Locally we disable only the collision during the rewind ability.
 		SetActorEnableCollision(false);
 	}
 }
@@ -134,7 +134,6 @@ void AMyShooterCharacter::OnEndRewindTime()
 		AShooterPlayerController* MyPC = Cast<AShooterPlayerController>(Controller);
 		if (MyPC)
 		{
-			//enable input
 			EnableInput(MyPC);
 		}
 
@@ -145,6 +144,7 @@ void AMyShooterCharacter::OnEndRewindTime()
 
 void AMyShooterCharacter::OnRep_PlayerHidden()
 {
+	// The player is playing the rewind time ability is not visible to other players.
 	if (!IsLocallyControlled())
 	{
 		SetActorHiddenInGame(bPlayerHidden);
@@ -154,14 +154,35 @@ void AMyShooterCharacter::OnRep_PlayerHidden()
 }
 
 
-void AMyShooterCharacter::OnResetShrink()
+void AMyShooterCharacter::OnStartShrink() 
+{
+	bPlayerShrinked = true;
+	ScaleBeforeShrink = GetActorScale();
+	// Run a Timer that will resize the player after an amount of time to the original scale
+	GetWorldTimerManager().SetTimer(ShrinkTimer, this, &AMyShooterCharacter::OnEndShrink, ShrinkEffectDuration, false);
+
+	if (GetLocalRole() == ROLE_Authority)
+	{
+		PlayerShrinkedScale = ScaleBeforeShrink * 0.5f;
+	}
+}
+
+
+void AMyShooterCharacter::OnEndShrink()
 {
 	bPlayerShrinked = false;
+	GetWorldTimerManager().ClearTimer(ShrinkTimer);
 
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		PlayerShrinkedScale = ScaleBeforeShrink;
 	}
+}
+
+
+void AMyShooterCharacter::OnRep_PlayerShrinkedScale()
+{
+	SetActorScale3D(PlayerShrinkedScale);
 }
 
 
@@ -179,8 +200,5 @@ void AMyShooterCharacter::OnCharacterCollide(UPrimitiveComponent* HitComponent, 
 }
 
 
-void AMyShooterCharacter::OnRep_PlayerShrinkedScale()
-{
-	SetActorScale3D(PlayerShrinkedScale);
-}
+
 
