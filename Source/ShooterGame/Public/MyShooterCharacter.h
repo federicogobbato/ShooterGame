@@ -19,6 +19,7 @@ class SHOOTERGAME_API AMyShooterCharacter : public AShooterCharacter
 
 protected:
 
+	UPROPERTY(Replicated)
 	bool bPlayerShrinked = false;
 
 	/* Used to reset the original scale of the player */

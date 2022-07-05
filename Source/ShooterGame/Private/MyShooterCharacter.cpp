@@ -49,6 +49,7 @@ void AMyShooterCharacter::GetLifetimeReplicatedProps(TArray <FLifetimeProperty>&
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AMyShooterCharacter, bPlayerHidden);
+	DOREPLIFETIME(AMyShooterCharacter, bPlayerShrinked);
 	DOREPLIFETIME(AMyShooterCharacter, PlayerShrinkedScale);
 }
 
@@ -113,12 +114,6 @@ void AMyShooterCharacter::OnStartRewindTime()
 	{
 		bPlayerHidden = true;
 	}
-	
-	if(IsLocallyControlled())
-	{
-		// Locally we disable only the collision during the rewind ability.
-		SetActorEnableCollision(false);
-	}
 }
 
 
@@ -128,55 +123,60 @@ void AMyShooterCharacter::OnEndRewindTime()
 	{
 		bPlayerHidden = false;
 	}
-
-	if (IsLocallyControlled())
-	{
-		AShooterPlayerController* MyPC = Cast<AShooterPlayerController>(Controller);
-		if (MyPC)
-		{
-			EnableInput(MyPC);
-		}
-
-		SetActorEnableCollision(true);
-	}
 }
 
 
 void AMyShooterCharacter::OnRep_PlayerHidden()
 {
-	// The player is playing the rewind time ability is not visible to other players.
 	if (!IsLocallyControlled())
 	{
+		// The player is using the rewind time ability is not visible to other players.
 		SetActorHiddenInGame(bPlayerHidden);
 		CurrentWeapon->SetActorHiddenInGame(bPlayerHidden);
 		SetActorEnableCollision(!bPlayerHidden);
+	}
+	else 
+	{
+		if (bPlayerHidden)
+		{
+			// Locally we disable only the collision during the rewind ability.
+			SetActorEnableCollision(false);
+		}
+		else 
+		{
+			AShooterPlayerController* MyPC = Cast<AShooterPlayerController>(Controller);
+			if (MyPC) EnableInput(MyPC);
+
+			SetActorEnableCollision(true);
+		}
 	}
 }
 
 
 void AMyShooterCharacter::OnStartShrink() 
 {
-	bPlayerShrinked = true;
 	ScaleBeforeShrink = GetActorScale();
-	// Run a Timer that will resize the player after an amount of time to the original scale
-	GetWorldTimerManager().SetTimer(ShrinkTimer, this, &AMyShooterCharacter::OnEndShrink, ShrinkEffectDuration, false);
 
 	if (GetLocalRole() == ROLE_Authority)
 	{
+		bPlayerShrinked = true;
 		PlayerShrinkedScale = ScaleBeforeShrink * 0.5f;
 	}
+
+	// Run a Timer that will resize the player after an amount of time to the original scale
+	GetWorldTimerManager().SetTimer(ShrinkTimer, this, &AMyShooterCharacter::OnEndShrink, ShrinkEffectDuration, false);
 }
 
 
 void AMyShooterCharacter::OnEndShrink()
 {
-	bPlayerShrinked = false;
-	GetWorldTimerManager().ClearTimer(ShrinkTimer);
-
 	if (GetLocalRole() == ROLE_Authority)
 	{
+		bPlayerShrinked = false;
 		PlayerShrinkedScale = ScaleBeforeShrink;
 	}
+
+	GetWorldTimerManager().ClearTimer(ShrinkTimer);
 }
 
 
@@ -188,14 +188,17 @@ void AMyShooterCharacter::OnRep_PlayerShrinkedScale()
 
 void AMyShooterCharacter::OnCharacterCollide(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	AMyShooterCharacter* character = Cast<AMyShooterCharacter>(OtherActor);
-
-	if (character && character->bPlayerShrinked)
+	if (!bPlayerShrinked)
 	{
-		FPointDamageEvent PointDmg;
-		PointDmg.Damage = 10000;
+		AMyShooterCharacter* otherCharacter = Cast<AMyShooterCharacter>(OtherActor);
 
-		character->TakeDamage(PointDmg.Damage, PointDmg, GetController(), this);
+		if (otherCharacter && otherCharacter->bPlayerShrinked)
+		{
+			FPointDamageEvent PointDmg;
+			PointDmg.Damage = 10000;
+
+			otherCharacter->TakeDamage(PointDmg.Damage, PointDmg, GetController(), this);
+		}
 	}
 }
 

@@ -48,7 +48,7 @@ void AShooterPlayerCameraManager::UpdateViewTargetInternal(FTViewTarget& OutVT, 
 			OutVT.POV.Location = MyPawn->GetPawnViewLocation();
 			OutVT.POV.Rotation = MyPawn->GetActorForwardVector().Rotation();
 		}
-		else if (MyPawn && MyPawn->GetPlayerShrinked())
+		else if (MyPawn->GetPlayerShrinked())
 		{
 			OutVT.POV.Location = MyPawn->GetPawnViewLocation();
 			OutVT.POV.Rotation = MyPawn->GetViewRotation();

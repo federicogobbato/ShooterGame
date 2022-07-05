@@ -96,7 +96,7 @@ void UMyShooterCharacterMovement::DoRewindTime()
 
 			if (RewindFrames.Num() > 0)
 			{
-				// Set next rewind position
+				// Get next rewind position
 				FRewindData& nextRewindFrame = RewindFrames.Last();
 				// Set the remaining rewind time
 				RewindedTime = nextRewindFrame.CaptureTime - RewindFrames[0].CaptureTime;
@@ -160,7 +160,7 @@ void UMyShooterCharacterMovement::GetNewRewindData()
 	if (RewindFrames.Num() > 0)
 	{
 		FRewindData& head = RewindFrames[0];
-		// Remove a Frame from the head
+		//Remove a Frame from the head if necessary   
 		if (newData.CaptureTime - head.CaptureTime >= RewindTimeDuration)
 		{
 			RewindFrames.RemoveSingle(head);
