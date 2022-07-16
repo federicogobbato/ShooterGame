@@ -8,7 +8,7 @@
 
 
 USTRUCT()
-/* Save Position and Rotation of the player, to be used later when play the rewind time ability. */
+/* Save Position and Rotation of the player, used later the rewind time ability is played. */
 struct FRewindData
 {
 	GENERATED_BODY()
@@ -46,11 +46,15 @@ private:
 	TArray<FRewindData> RewindFrames;
 
 	/* Define when a new RewindData can be collected. */
-	bool WaitingForRewindData = false;
+	bool bWaitingForRewindData = false;
+
+	/* Timer used to verify that a new position and rotation of the player are set only after "DelayBetweenRewindFrame", during the rewind time execution */
+	float SingleFrameTimer = 0;
 
 protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = CustomAbilities)
+	/* Define which method is used to teleport */
 	bool UseTeleportTo = false;
 
 	UPROPERTY(EditDefaultsOnly, Category = CustomAbilities)
@@ -58,14 +62,14 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = CustomAbilities)
 	/* Max time rewinded when the ability is used. */
-	float RewindTimeDuration = 10.0f;
+	float MaxTimeRewinded = 10.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = CustomAbilities)
 	/* Time necessary to play again the Rewind ability.*/
 	float RewindTimeChargingTime = 5.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = CustomAbilities)
-	/* Time between two frame where position and rotation of the player are saved. */
+	/* Time between two FRewindData are saved. */
 	float DelayBetweenRewindFrame = 0.05f;
 
 	UPROPERTY(BlueprintReadOnly)
@@ -133,6 +137,7 @@ public:
 
 	virtual uint8 GetCompressedFlags() const override;
 
+	/* bPressedTeleportSaved and bPressedRewindTimeSaved are set */
 	virtual void SetMoveFor(ACharacter* Character, float InDeltaTime, FVector const& NewAccel, class FNetworkPredictionData_Client_Character& ClientData) override;
 
 	virtual void Clear() override;

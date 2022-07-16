@@ -64,6 +64,11 @@ void UMyShooterCharacterMovement::DoTeleport()
 	{
 		MyCharacterOwner->bPressedTeleport = false;
 
+		//TODO: the teleport destination should be the postition far "TeleportDistance" from the player in the direction where the player is looking 
+		// 1. do a raycast in the direction where the player is looking to check if there are some obstacle (can teleport through a window)
+		// 2. find if the position is inside the nav mesh
+		// 3. use SetActorLocation to move the player
+		
 		// Calculate the teleport destination
 		FVector teleportDestination = CharacterOwner->GetActorLocation() + CharacterOwner->GetActorForwardVector() * TeleportDistance;
 		
@@ -94,21 +99,30 @@ void UMyShooterCharacterMovement::DoRewindTime()
 				MyCharacterOwner->OnStartRewindTime();
 			}
 
-			if (RewindFrames.Num() > 0)
+			if (SingleFrameTimer >= DelayBetweenRewindFrame)
 			{
-				// Get next rewind position
-				FRewindData& nextRewindFrame = RewindFrames.Last();
-				// Set the remaining rewind time
-				RewindedTime = nextRewindFrame.CaptureTime - RewindFrames[0].CaptureTime;
-				// Move the player
-				MyCharacterOwner->SetActorLocationAndRotation(nextRewindFrame.Position, nextRewindFrame.Rotation);
+				SingleFrameTimer = 0;
 
-				RewindFrames.RemoveSingle(nextRewindFrame);
+				if (RewindFrames.Num() > 0)
+				{
+					// Get next rewind position
+					FRewindData& nextRewindFrame = RewindFrames.Last();
+					// Set the remaining rewind time
+					RewindedTime = nextRewindFrame.CaptureTime - RewindFrames[0].CaptureTime;
+					// Move the player
+					MyCharacterOwner->SetActorLocationAndRotation(nextRewindFrame.Position, nextRewindFrame.Rotation);
+					RewindFrames.RemoveSingle(nextRewindFrame);
+				}
+
+				if (RewindFrames.Num() == 0)
+				{
+					MyCharacterOwner->bPressedRewindTime = false;
+					RewindedTime = 0;
+				}
 			}
-			else 
-			{
-				MyCharacterOwner->bPressedRewindTime = false;
-				RewindedTime = 0;
+			else
+			{	
+				SingleFrameTimer += GetWorld()->DeltaTimeSeconds;
 			}
 		}
 		else
@@ -129,9 +143,9 @@ void UMyShooterCharacterMovement::DoRewindTime()
 			}
 			else
 			{
-				if (!WaitingForRewindData)
+				if (!bWaitingForRewindData)
 				{
-					WaitingForRewindData = true;
+					bWaitingForRewindData = true;
 
 					//We save a new frame just after a delay, to speed up the player movement during the RewindTime ability 
 					FTimerHandle getNewRewindDataTimer;
@@ -149,7 +163,7 @@ void UMyShooterCharacterMovement::DoRewindTime()
 
 void UMyShooterCharacterMovement::GetNewRewindData()
 {
-	WaitingForRewindData = false;
+	bWaitingForRewindData = false;
 
 	//Populate the RewindFrames Queue
 	FRewindData newData;
@@ -161,7 +175,7 @@ void UMyShooterCharacterMovement::GetNewRewindData()
 	{
 		FRewindData& head = RewindFrames[0];
 		//Remove a Frame from the head if necessary   
-		if (newData.CaptureTime - head.CaptureTime >= RewindTimeDuration)
+		if (newData.CaptureTime - head.CaptureTime >= MaxTimeRewinded)
 		{
 			RewindFrames.RemoveSingle(head);
 		}
@@ -219,8 +233,8 @@ void FMySavedMove_Character::SetMoveFor(ACharacter* Character, float InDeltaTime
 {
 	FSavedMove_Character::SetMoveFor(Character, InDeltaTime, NewAccel, ClientData);
 
+	//Used to set later the flags as well as bPressedJump or bWantsToCrouch
 	bPressedTeleportSaved = Cast<AMyShooterCharacter>(Character)->bPressedTeleport;
-
 	bPressedRewindTimeSaved = Cast<AMyShooterCharacter>(Character)->bPressedRewindTime;
 }
 

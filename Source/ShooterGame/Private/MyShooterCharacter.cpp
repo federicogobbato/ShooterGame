@@ -155,16 +155,14 @@ void AMyShooterCharacter::OnRep_PlayerHidden()
 
 void AMyShooterCharacter::OnStartShrink() 
 {
-	ScaleBeforeShrink = GetActorScale();
-
 	if (GetLocalRole() == ROLE_Authority)
 	{
 		bPlayerShrinked = true;
+		ScaleBeforeShrink = GetActorScale();
 		PlayerShrinkedScale = ScaleBeforeShrink * 0.5f;
+		// Run a Timer that will resize the player after an amount of time to the original scale
+		GetWorldTimerManager().SetTimer(ShrinkTimer, this, &AMyShooterCharacter::OnEndShrink, ShrinkEffectDuration, false);
 	}
-
-	// Run a Timer that will resize the player after an amount of time to the original scale
-	GetWorldTimerManager().SetTimer(ShrinkTimer, this, &AMyShooterCharacter::OnEndShrink, ShrinkEffectDuration, false);
 }
 
 
@@ -174,9 +172,8 @@ void AMyShooterCharacter::OnEndShrink()
 	{
 		bPlayerShrinked = false;
 		PlayerShrinkedScale = ScaleBeforeShrink;
+		GetWorldTimerManager().ClearTimer(ShrinkTimer);
 	}
-
-	GetWorldTimerManager().ClearTimer(ShrinkTimer);
 }
 
 
